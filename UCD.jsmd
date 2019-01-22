@@ -1,0 +1,64 @@
+%% md
+# Design Patterns Comparison
+
+Modelling the ability of a project to change its core paradigm as a logistic function. 
+
+![Logistic Function](https://wikimedia.org/api/rest_v1/media/math/render/svg/6f42e36c949c94189976ae00853af9a1b618e099)
+
+Where L = <em id='L'>1</em>, k = <em id='k'>1</em>, and x_0 is <em id='x_0'>7.5</em>.
+<br><br>
+
+%% py
+def update_values():
+  document.getElementById('L').innerHTML = L
+  document.getElementById('k').innerHTML = k
+  document.getElementById('x_0').innerHTML = x_0
+
+%% py
+L = 1
+k = 1
+x_0 = 7.5
+
+update_values() # make change in options is reflected in description
+
+import numpy as np
+def log_func(x,L=1,k=1,x_0=0):
+    return L / (1 + pow(np.e,-k*(x-x_0)))
+
+X = np.linspace(0, 15, 100)
+Y = list(map(lambda x: 1-log_func(x,L=L,k=k,x_0=x_0), X))
+
+%% py
+from matplotlib import pyplot as plt
+f,axs = plt.subplots(1,2,figsize=(6,3))
+for ax in axs:
+    ax.plot(X, Y, label = "Ability to change\ncore paradigm")
+    
+axs[0].set_title("Organic Design")
+axs[1].set_title("User Centered Design")
+axs[1].legend(loc=1)
+f.tight_layout()
+f.show()
+plt.close()
+
+%% md
+
+To model the probability of receiving feedback that informs us a key design change needs to happen we will assume that this scales linearly with the number of users. On a short to medium timescale it is reasonable to model the number of users in a successful project growing exponentially.
+
+![Exponential Function](https://wikimedia.org/api/rest_v1/media/math/render/svg/b8f7e0207f9410fd16506b8cab68b31b78c4d219)
+
+Where a = <em id='a'>1</em> and b = <em id='b'>1</em>.
+
+In user-centered design however it is possible to start off with a very 
+
+%% py
+# let's do some styling
+from js import document
+from js import iodide
+document.body.style['text-align'] = "center"
+
+# center plots
+plots = document.querySelectorAll('*[id^="matplotlib"]');
+for plot in plots:
+    plot.style.display = "block"
+    plot.style.margin = "auto auto"
