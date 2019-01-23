@@ -3,41 +3,44 @@
 
 Modelling the ability of a project to change its core paradigm as a logistic function. 
 
-![Logistic Function](https://wikimedia.org/api/rest_v1/media/math/render/svg/6f42e36c949c94189976ae00853af9a1b618e099)
+$$ f(x) =\frac L {1+e^{-k(x-x_0)}} $$
 
 Where L = <em id='L'>1</em>, k = <em id='k'>1</em>, and x_0 is <em id='x_0'>7.5</em>.
 <br><br>
-
-%% py
-def update_values():
-  document.getElementById('L').innerHTML = L
-  document.getElementById('k').innerHTML = k
-  document.getElementById('x_0').innerHTML = x_0
 
 %% py
 L = 1
 k = 1
 x_0 = 7.5
 
-update_values() # make change in options is reflected in description
-
 import numpy as np
 def log_func(x,L=1,k=1,x_0=0):
     return L / (1 + pow(np.e,-k*(x-x_0)))
 
-X = np.linspace(0, 15, 100)
-Y = list(map(lambda x: 1-log_func(x,L=L,k=k,x_0=x_0), X))
+data = dict()
+data['org'],data['ucd'] = dict(), dict()
+data['org']['change'], data['ucd']['change'] = dict(),dict()
+
+X = data['ucd']['change']['X'] = \
+data['org']['change']['X'] = np.linspace(0, 15, 100)
+data['ucd']['change']['Y'] = \
+data['org']['change']['Y'] = list(map(lambda x: 1-log_func(x,L=L,k=k,x_0=x_0), X))
 
 %% py
 from matplotlib import pyplot as plt
+
+def plot(f, axs, data, key = 'change', label = ''):
+  for (dt,ax) in zip(['org','ucd'],axs):
+      ax.plot(data[dt][key]['X'], data[dt][key]['Y'], label = label)
+      ax.set_ylabel("Probability")
+  axs[0].set_title("Organic Design")
+  axs[1].set_title("User Centered Design")
+  f.tight_layout()
+  return f,axs
+
 f,axs = plt.subplots(1,2,figsize=(6,3))
-for ax in axs:
-    ax.plot(X, Y, label = "Ability to change\ncore paradigm")
-    
-axs[0].set_title("Organic Design")
-axs[1].set_title("User Centered Design")
-axs[1].legend(loc=1)
-f.tight_layout()
+plot(f, axs, data, key = 'change', label = 'of being able to change\ncore paradigm')
+axs[1].legend()
 f.show()
 plt.close()
 
@@ -45,16 +48,79 @@ plt.close()
 
 To model the probability of receiving feedback that informs us a key design change needs to happen we will assume that this scales linearly with the number of users. On a short to medium timescale it is reasonable to model the number of users in a successful project growing exponentially.
 
-![Exponential Function](https://wikimedia.org/api/rest_v1/media/math/render/svg/b8f7e0207f9410fd16506b8cab68b31b78c4d219)
+$$ f(x) = ab^x $$
 
-Where a = <em id='a'>1</em> and b = <em id='b'>1</em>.
+Where $a_o$ = <em id='a_o'>1</em> and $b_o$ = <em id='b_o'>1</em>.
 
-In user-centered design however it is possible to start off with a very 
+In user-centered design however it is possible to explicitly search for this feedback from the very beginning, starting of with qualitative methods, and then drifiting into quantative ones as the project becomes more developed.
+
+So in this case, while the quality of available feedback might scale with e.g. resources, it's likely to change much less. So we might say $b_u$ = <em id='b_u'>0.2</em> and add an offset $c_u$ = <em id='c_u'>0.</em>
+
+%% py
+a_o = 1
+b_o = 1.04
+c_o = 0.1
+
+a_u = 1
+b_u = 1.02
+c_u = 0.5
+
+def exp_func(x,a=1,b=1,c=0):
+    return a*pow(b,x) + c - 1
+
+data['org']['feedback'],data['ucd']['feedback'] = dict(),dict()
+
+X = data['ucd']['feedback']['X'] = \
+data['org']['feedback']['X'] = np.linspace(0, 15, 100)
+data['org']['feedback']['Y'] = list(map(lambda x: exp_func(x,a=a_o, b=b_o, c=c_o), X))
+data['ucd']['feedback']['Y'] = list(map(lambda x: exp_func(x,a=a_u, b=b_u, c=c_u), X))
+
+f,axs = plt.subplots(1,3,figsize=(9,3))
+plot(f, axs, data, key = 'change', label = 'of being able to change\ncore paradigm')
+plot(f, axs, data, key = 'feedback', label = 'of finding\nthings that need changing\nin core paradigm')
+axs[2].plot([[1,1],[1,1]],[[2,1],[2,1]])
+axs[2].legend(axs[1].get_legend_handles_labels()[1][:])
+axs[2].axis("off")
+f.show()
+plt.close()
+%% md
+<br><br>
+Thus our goal might be to maximise the probability of finding out a change needs to happen while it is still possible to make said change.
+
+$$ max(A \cdot B) $$
+
+Where $A$ is the probability of being able to make the change and $B$ is the probability of finding out that a change is needed.
+
+%% py
+def bayes(a,b):
+    return np.dot((np.array(a)),b)/len(a)
+p = [bayes(data[des]['change']['Y'],data[des]['feedback']['Y']) for des in ['org', 'ucd']]
+
+f,ax = plt.subplots(1,1,figsize=(2,3))
+ax.bar([1,2],p)
+ax.set_xticks([1,2])
+ax.set_xticklabels(["Organic\nDesign", "Human-Centered\nDesign"],
+                  rotation=90)
+ax.set_ylabel("Finding Change at\nright time")
+f.tight_layout()
+plt.show()
+plt.close()
+
+%% py
+from js import document
+def update_values():
+  document.getElementById('L').innerHTML = L
+  document.getElementById('k').innerHTML = k
+  document.getElementById('x_0').innerHTML = x_0
+  document.getElementById('a_o').innerHTML = a_o
+  document.getElementById('b_o').innerHTML = b_o
+  document.getElementById('b_u').innerHTML = b_u
+  document.getElementById('c_u').innerHTML = c_u
+
+update_values() # make change in options is reflected in description
 
 %% py
 # let's do some styling
-from js import document
-from js import iodide
 document.body.style['text-align'] = "center"
 
 # center plots
